@@ -246,7 +246,7 @@ class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
                 except:
                     b += 1
-                    print("There is no drug with this active ingredient")
+                    print("There are no drugs with this active ingredient")
                     warnin.append('Unknown')
 
             with open("trial4.html", "w") as f:
