@@ -252,4 +252,4 @@ except KeyboardInterrupt:
 
 httpd.server_close()
 print("")
-print("Server stopped")
+print("Server stopped!")
