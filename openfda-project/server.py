@@ -26,24 +26,24 @@ class OpenFDAClient():
         return info_list
 class OpenFDAParser():
     def equisde(self,info_list,plus):
-        list2=[]
+        lamp=[]
         if len(plus)==2:
             for i in range(len(info_list["results"])):
                 try:
-                    list2.append(info_list["results"][i][plus[0]][plus[1]])
+                    lamp.append(info_list["results"][i][plus[0]][plus[1]])
                 except KeyError:
-                    list2.append("Unknown")
+                    lamp.append("Unknown")
         elif len(plus)==3:
             for i in range(len(info_list["results"])):
                 try:
-                    list2.append(info_list["results"][i][plus[0]][plus[1]][plus[2]])
+                    lamp.append(info_list["results"][i][plus[0]][plus[1]][plus[2]])
                 except KeyError:
-                    list2.append("Unknonwn")
-        return list2
+                    lamp.append("Unknonwn")
+        return lamp
 class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            list2=[]
+            lamp=[]
             if self.path == "/":
                 self.send_response(200)
                 with open("search.html","r")as f:
@@ -61,8 +61,8 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 url ="/drug/label.json?search=active_ingredient:" + drug + "&" + "limit=" + limit
                 info_list= OpenFDAClient.urldrug(self,url)
                 seed=["active_ingredient",0]
-                list2= OpenFDAParser.equisde(self,info_list,seed)
-                OpenFDAHTML.texto(self,list2)
+                lamp= OpenFDAParser.equisde(self,info_list,seed)
+                OpenFDAHTML.texto(self,lamp)
             elif "searchCompany" in self.path:
                 self.send_response(200)
                 company = self.path.split("&")[0].split("=")[1]
@@ -73,32 +73,32 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 url = "/drug/label.json?search=manufacturer_name:" + company + "&" + "limit=" + limit
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed = ["openfda", "manufacturer_name", 0]
-                list2 = OpenFDAParser.equisde(self, info_list, seed)
-                OpenFDAHTML.texto(self, list2)
+                lamp = OpenFDAParser.equisde(self, info_list, seed)
+                OpenFDAHTML.texto(self, lamp)
             elif "listDrugs" in self.path:
                 self.send_response(200)
                 glue =self.path.split("?")[1].split("=")[1]
                 url = "/drug/label.json?limit=" + glue
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed=["openfda","brand_name",0]
-                list2 = OpenFDAParser.equisde(self,info_list,seed)
-                OpenFDAHTML.texto(self, list2)
+                lamp = OpenFDAParser.equisde(self,info_list,seed)
+                OpenFDAHTML.texto(self, lamp)
             elif "listCompanies"in self.path:
                 self.send_response(200)
                 glue =self.path.split("?")[1].split("=")[1]
                 url = "/drug/label.json?limit=" + glue
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed=["openfda","manufacturer_name",0]
-                list2 = OpenFDAParser.equisde(self, info_list, seed)
-                OpenFDAHTML.texto(self, list2)
+                lamp = OpenFDAParser.equisde(self, info_list, seed)
+                OpenFDAHTML.texto(self, lamp)
             elif "listWarnings" in self.path :
                 self.send_response(200)
                 glue = self.path.split("?")[1].split("=")[1]
                 url = "/drug/label.json?limit=" + glue
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed = ["warnings", 0]
-                list2 = OpenFDAParser.equisde(self, info_list, seed)
-                OpenFDAHTML.texto(self, list2)
+                lamp = OpenFDAParser.equisde(self, info_list, seed)
+                OpenFDAHTML.texto(self, lamp)
             elif "secret" in self.path:
                 self.send_response(401)
                 self.send_header("WWW-Authenticate", "Basic realm='OpenFDA Private Zone")
@@ -109,8 +109,8 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
             else:
                 self.send_response(404)
-                list2.append("Error 404: Webpage not found")
-                OpenFDAHTML.texto(self, list2)
+                lamp.append("Error 404: Webpage not found")
+                OpenFDAHTML.texto(self, lamp)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             with open("text.html", "r")as f:
@@ -118,8 +118,8 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(bytes(file, "utf8"))
         except KeyError:
             self.send_response(404)
-            list2.append("Error 404: Webpage not found")
-            OpenFDAHTML.texto(self, list2)
+            lamp.append("Error 404: Webpage not found")
+            OpenFDAHTML.texto(self, lamp)
         return
 
 Handler = http.server.SimpleHTTPRequestHandler
