@@ -2,258 +2,128 @@ import http.server
 import socketserver
 import http.client
 import json
-
-
-
-
-# -- IP and the port of the server
-IP = "localhost"  # Localhost means "I": your local machine
+socketserver.TCPServer.allow_reuse_adress = True
+#Now we stablish the ip and the port of the server
+IP = "localhost"
 PORT = 8000
-
-socketserver.TCPServer.allow_reuse_address = True
-# HTTPRequestHandler class
-class testHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-    # GET
+class OpenFDAHTML():
+    def texto(self,list):
+        peanut = ""
+        for elements in list:
+            peanut = peanut+"\n\t<li>" + elements + "</li>"
+        mess = "<!doctype html>" + "\n" +"<html>" + "\n" + "<body>" + "\n" "<ul>" + "\n"+peanut+"</ul>" + "\n" + "</body>" + "\n" + "</html>"
+        with open("text.html","w")as f:
+            f.write(mess)
+class OpenFDAClient():
+    def urldrug(self,url):
+        headers = {'User-Agent': 'http-client'}
+        conn = http.client.HTTPSConnection("api.fda.gov")
+        conn.request("GET", url, None, headers)
+        r1 = conn.getresponse()
+        info1 = r1.read().decode("utf-8")
+        info_list = json.loads(info1)
+        conn.close()
+        return info_list
+class OpenFDAParser():
+    def equisde(self,info_list,plus):
+        list2=[]
+        if len(plus)==2:
+            for i in range(len(info_list["results"])):
+                try:
+                    list2.append(info_list["results"][i][plus[0]][plus[1]])
+                except KeyError:
+                    list2.append("Unknown")
+        elif len(plus)==3:
+            for i in range(len(info_list["results"])):
+                try:
+                    list2.append(info_list["results"][i][plus[0]][plus[1]][plus[2]])
+                except KeyError:
+                    list2.append("Unknonwn")
+        return list2
+class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
+        try:
+            list2=[]
+            if self.path == "/":
+                self.send_response(200)
+                with open("search2.html","r")as f:
+                    mess=f.read()
+                with open("text.html","w")as f:
+                    f.write(mess)
 
-        path =self.path  #We use this step so that all the different status codes change in the diferent cases we have
-
-        if path == "/" or 'searchDrug' in path or 'searchCompany' in path or 'listDrugs' in path or 'listCompanies' in path or 'listWarnings' in path:
-            status_code = 200
-        elif 'redirect' in path:
-            status_code = 302
-        elif 'secret' in path:
-            status_code = 401
-        else:
-            status_code = 404
-
-        self.send_response(status_code)
-
-        if path == "/" or 'searchDrug' in path or 'searchCompany' in path or 'listDrugs' in path or 'listCompanies' in path or 'listWarnings' in path:
+            elif "searchDrug" in self.path:
+                self.send_response(200)
+                drug=self.path.split("&")[0].split("=")[1]
+                if "limit"in self.path:
+                    limit=self.path.split("&")[1].split("=")[1]
+                else:
+                    limit = "10"
+                url ="/drug/label.json?search=active_ingredient:" + drug + "&" + "limit=" + limit
+                info_list= OpenFDAClient.urldrug(self,url)
+                seed=["active_ingredient",0]
+                list2= OpenFDAParser.lol(self,info_list,seed)
+                OpenFDAHTML.texto(self,list2)
+            elif "searchCompany" in self.path:
+                self.send_response(200)
+                company = self.path.split("&")[0].split("=")[1]
+                if "limit" in self.path:
+                    limit = self.path.split("&")[1].split("=")[1]
+                else:
+                    limit = "10"
+                url = "/drug/label.json?search=manufacturer_name:" + company + "&" + "limit=" + limit
+                info_list = OpenFDAClient.urldrug(self, url)
+                seed = ["openfda", "manufacturer_name", 0]
+                list2 = OpenFDAParser.lol(self, info_list, seed)
+                OpenFDAHTML.texto(self, list2)
+            elif "listDrugs" in self.path:
+                self.send_response(200)
+                glue =self.path.split("?")[1].split("=")[1]
+                url = "/drug/label.json?limit=" + glue
+                info_list = OpenFDAClient.urldrug(self, url)
+                seed=["openfda","brand_name",0]
+                list2 = OpenFDAParser.lol(self,info_list,seed)
+                OpenFDAHTML.texto(self, list2)
+            elif "listCompanies"in self.path:
+                self.send_response(200)
+                glue =self.path.split("?")[1].split("=")[1]
+                url = "/drug/label.json?limit=" + glue
+                info_list = OpenFDAClient.urldrug(self, url)
+                seed=["openfda","manufacturer_name",0]
+                list2 = OpenFDAParser.lol(self, info_list, seed)
+                OpenFDAHTML.texto(self, list2)
+            elif "listWarnings" in self.path :
+                self.send_response(200)
+                glue = self.path.split("?")[1].split("=")[1]
+                url = "/drug/label.json?limit=" + glue
+                info_list = OpenFDAClient.urldrug(self, url)
+                seed = ["warnings", 0]
+                list2 = OpenFDAParser.lol(self, info_list, seed)
+                OpenFDAHTML.texto(self, list2)
+            elif "secret" in self.path:
+                self.send_response(401)
+                self.send_header("WWW-Authenticate", "Basic realm='OpenFDA Private Zone")
+                self.end_headers()
+            elif "redirect" in self.path:
+                self.send_response(302)
+                self.send_header('Location', 'http://localhost:8000/')
+                self.end_headers()
+            else:
+                self.send_response(404)
+                list.append("Error 404: Webpage not found")
+                OpenFDAHTML.texto(self, list)
             self.send_header('Content-type', 'text/html')
-        elif 'redirect' in path:
-            self.send_header('Location', 'http://localhost:8000/')
-        elif 'secret' in path:
-            self.send_header('WWW-Authenticate', 'Basic realm="OpenFDA Private Zone"')
+            self.end_headers()
+            with open("text.html", "r")as f:
+                file = f.read()
+            self.wfile.write(bytes(file, "utf8"))
+        except KeyError:
+            self.send_response(404)
+            list.append("Error 404: Webpage not found")
+            OpenFDAHTML.texto(self, list)
+        return
 
-
-        # Send response status code
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
-
-
-        def active_ingredient():  #For searching the active ingredient
-            headers = {'User-Agent': 'http-client'}
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            data = self.path.strip('/search?').split('&')
-            drug = data[0].split('=')[1]
-            if 'limit'in self.path:
-                limit = data[1].split('=')[1]
-                if 'limit' == '':  #In case the limit is empty we use 10 as default
-                    limit= '10'
-            else:
-                limit= '10'
-            print("client has succesfully made a request")
-
-            url = "/drug/label.json?search=active_ingredient:" + drug + '&' + 'limit=' + limit
-            print(url)
-            conn.request("GET", url, None, headers)
-            r1 = conn.getresponse()
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-            repos = json.loads(repos_raw)
-
-            drug = []
-            a = 0
-            nlimit= int(limit)
-            intro = "<head>"+ '<h1>' + "Here is your drugs ID list" +'<body style="background-color:snow;">'+'</h1>'+ '</head>'
-            sd = "<ol>"
-
-            while a < nlimit:
-                try:
-                    drug.append(repos['results'][a]['openfda']['brand_name'][0])
-                    a += 1
-
-                except:
-                    a += 1
-                    print("There is no drug with this active ingredient")
-                    drug.append('Unknown')
-
-            with open("trial4.html", "w") as f:
-                f.write(intro)
-                f.write(sd)
-                for el in drug:
-                    el_1 = "<t>" + "<li>" + el
-                    f.write(el_1)
-
-        def manufacturer_name():  #For the manufacturer name of a drug
-            headers = {'User-Agent': 'http-client'}
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            data = self.path.strip('/search?').split('&')
-            manufacturer_name = data[0].split('=')[1]
-            if 'limit'in self.path:
-                limit = data[1].split('=')[1]
-                if 'limit' == '':
-                    limit = '10'
-            else:
-                limit= '10'
-            print("client has succesfully made a request")
-            url = "/drug/label.json?search=openfda.manufacturer_name:" + manufacturer_name + '&' + 'limit=' + limit
-            print(url)
-            conn.request("GET", url, None, headers)
-            r1 = conn.getresponse()
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-            repos = json.loads(repos_raw)
-
-            drug = []
-            a = 0
-            nlimit = int(limit) #We transform the limit into an integer, so we can use it.
-            intro = "<head>" + '<h1>' + "Here is your drug list from the manufacturer you searched." + '<body style="background-color:snow;">' + '</h1>' + '</head>'
-            sd = "<ol>"
-
-            while a < nlimit:
-                try:
-                    drug.append(repos['results'][a]['openfda']['brand_name'][0])
-                    a += 1
-
-                except:
-                    a += 1
-                    print("There is no drug with this active ingredient")
-                    drug.append('Unknown')
-
-            with open("trial4.html", "w") as f:
-                f.write(intro)
-                f.write(sd)
-                for el in drug:
-                    el_1 = "<t>" + "<li>" + el
-                    f.write(el_1)
-
-        def drug_list(): #for giving the default drug list
-            headers = {'User-Agent': 'http-client'}
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            data = self.path.strip('label.json?').split('=')
-            limit = data[1]
-            print("client has succesfully made a request")
-            url = "/drug/label.json?limit=" + limit
-            print(url)
-            conn.request("GET", url, None, headers)
-            r1 = conn.getresponse()
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-            repos = json.loads(repos_raw)
-
-            drug = []
-            a = 0
-            nlimit = int(limit)
-            intro = "<head>" + '<h1>' + "Here is your drug default list" + '<body style="background-color:snow;">' + '</h1>' + '</head>'
-            sd = "<ol>"
-
-            while a < nlimit:
-                try:
-                    drug.append(repos['results'][a]['openfda']['brand_name'][0])
-                    a += 1
-
-                except:
-                    a += 1
-                    print("There is no drug with this active ingredient")
-                    drug.append('Unknown')
-
-
-            with open("trial4.html", "w") as f:
-                f.write(intro)
-                f.write(sd)
-                for el in drug:
-                    el_1 = "<t>" + "<li>" + el
-                    f.write(el_1)
-
-        def manufacturer_list():  # for giving the default manufacturer name list
-            headers = {'User-Agent': 'http-client'}
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            data = self.path.strip('label.json?').split('=')
-            limit = data[1]
-            print("client has succesfully made a request")
-            url = "/drug/label.json?limit=" + limit
-            print(url)
-            conn.request("GET", url, None, headers)
-            r1 = conn.getresponse()
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-            repos = json.loads(repos_raw)
-
-            drug = []
-            a = 0
-            nlimit = int(limit)
-            intro = "<head>" + '<h1>' + "Here is your manufacturer name default list" + '<body style="background-color:snow;">' + '</h1>' + '</head>'
-            sd = "<ol>"
-
-            while a < nlimit:
-                try:
-                    drug.append(repos['results'][a]['openfda']['manufacturer_name'][0])
-                    a += 1
-
-                except:
-                    a += 1
-                    print("There is no drug with this active ingredient")
-                    drug.append('Unknown')
-
-            with open("trial4.html", "w") as f:
-                f.write(intro)
-                f.write(sd)
-                for el in drug:
-                    el_1 = "<t>" + "<li>" + el
-                    f.write(el_1)
-
-        def warning_list():  # for giving the warnings of a drug list
-            headers = {'User-Agent': 'http-client'}
-            conn = http.client.HTTPSConnection("api.fda.gov")
-            data = self.path.strip('label.json?').split('=')
-            limit = data[1]
-            print("client has succesfully made a request")
-            url = "/drug/label.json?limit=" + limit
-            print(url)
-            conn.request("GET", url, None, headers)
-            r1 = conn.getresponse()
-            repos_raw = r1.read().decode("utf-8")
-            conn.close()
-            repos = json.loads(repos_raw)
-
-            drug = []
-            warnin = []
-            a = 0
-            b = 0
-            i = 0
-            nlimit = int(limit)
-            intro = "<head>" + '<h1>' + "Here is your warning list" + '<body style="background-color:snow;">' + '</h1>' + '</head>'
-            sd = "<ol>"
-
-            while a < nlimit:
-                try:
-                    drug.append(repos['results'][a]['openfda']['brand_name'][0])
-                    a += 1
-
-                except:
-                    a += 1
-                    print("There is no drug with this active ingredient")
-                    drug.append('Unknown')
-
-            while b < nlimit:
-                try:
-                    warnin.append(repos['results'][a]['warnings'][0])
-                    b += 1
-
-                except:
-                    b += 1
-                    print("There are no drugs with this active ingredient")
-                    warnin.append('Unknown')
-
-            with open("trial4.html", "w") as f:
-                f.write(intro)
-                f.write(sd)
-                while i < nlimit:
-                    for el in drug:
-                        el_1 = "<t>" + "<li>" + 'The warning for:' + drug[i] + ' '+ 'is' + ' '+ warnin[i]
-                        f.write(el_1)
-                        i += 1
+Handler = http.server.SimpleHTTPRequestHandler
+Handler = testHTTPHandler
+httpd = socketserver.TCPServer((IP, PORT), Handler)
+print("serving at port", PORT)
+httpd.serve_forever()
