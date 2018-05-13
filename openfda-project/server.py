@@ -46,7 +46,7 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
             list2=[]
             if self.path == "/":
                 self.send_response(200)
-                with open("search2.html","r")as f:
+                with open("search.html","r")as f:
                     mess=f.read()
                 with open("text.html","w")as f:
                     f.write(mess)
