@@ -61,7 +61,7 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 url ="/drug/label.json?search=active_ingredient:" + drug + "&" + "limit=" + limit
                 info_list= OpenFDAClient.urldrug(self,url)
                 seed=["active_ingredient",0]
-                list2= OpenFDAParser.lol(self,info_list,seed)
+                list2= OpenFDAParser.equisde(self,info_list,seed)
                 OpenFDAHTML.texto(self,list2)
             elif "searchCompany" in self.path:
                 self.send_response(200)
@@ -73,7 +73,7 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 url = "/drug/label.json?search=manufacturer_name:" + company + "&" + "limit=" + limit
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed = ["openfda", "manufacturer_name", 0]
-                list2 = OpenFDAParser.lol(self, info_list, seed)
+                list2 = OpenFDAParser.equisde(self, info_list, seed)
                 OpenFDAHTML.texto(self, list2)
             elif "listDrugs" in self.path:
                 self.send_response(200)
@@ -81,7 +81,7 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 url = "/drug/label.json?limit=" + glue
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed=["openfda","brand_name",0]
-                list2 = OpenFDAParser.lol(self,info_list,seed)
+                list2 = OpenFDAParser.equisde(self,info_list,seed)
                 OpenFDAHTML.texto(self, list2)
             elif "listCompanies"in self.path:
                 self.send_response(200)
@@ -89,7 +89,7 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 url = "/drug/label.json?limit=" + glue
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed=["openfda","manufacturer_name",0]
-                list2 = OpenFDAParser.lol(self, info_list, seed)
+                list2 = OpenFDAParser.equisde(self, info_list, seed)
                 OpenFDAHTML.texto(self, list2)
             elif "listWarnings" in self.path :
                 self.send_response(200)
@@ -97,7 +97,7 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 url = "/drug/label.json?limit=" + glue
                 info_list = OpenFDAClient.urldrug(self, url)
                 seed = ["warnings", 0]
-                list2 = OpenFDAParser.lol(self, info_list, seed)
+                list2 = OpenFDAParser.equisde(self, info_list, seed)
                 OpenFDAHTML.texto(self, list2)
             elif "secret" in self.path:
                 self.send_response(401)
@@ -109,8 +109,8 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
             else:
                 self.send_response(404)
-                list.append("Error 404: Webpage not found")
-                OpenFDAHTML.texto(self, list)
+                list2.append("Error 404: Webpage not found")
+                OpenFDAHTML.texto(self, list2)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
             with open("text.html", "r")as f:
@@ -118,8 +118,8 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(bytes(file, "utf8"))
         except KeyError:
             self.send_response(404)
-            list.append("Error 404: Webpage not found")
-            OpenFDAHTML.texto(self, list)
+            list2.append("Error 404: Webpage not found")
+            OpenFDAHTML.texto(self, list2)
         return
 
 Handler = http.server.SimpleHTTPRequestHandler
