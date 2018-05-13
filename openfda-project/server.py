@@ -119,7 +119,7 @@ class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
         except KeyError:
             self.send_response(404)
             list2.append("Error 404: Webpage not found")
-            OpenFDAHTML.texto(self, list2)
+            OpenFDAHTML.texto(self, list)
         return
 
 Handler = http.server.SimpleHTTPRequestHandler
