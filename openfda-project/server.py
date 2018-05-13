@@ -39,7 +39,7 @@ class OpenFDAParser():
                     lamp.append(info_list["results"][i][plus[0]][plus[1]][plus[2]])
                 except KeyError:
                     lamp.append("Unknonwn")
-        return lamp
+        return lam
 class  testHTTPHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         try:
